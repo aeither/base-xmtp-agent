@@ -6,7 +6,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx --watch index.ts",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "gen:keys": "tsx scripts/generateKeys.ts",
+    "revoke": "tsx scripts/revokeInstallations.ts"
   },
   "dependencies": {
     "@xmtp/agent-sdk": "*",
