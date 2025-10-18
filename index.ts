@@ -1,28 +1,50 @@
 import "dotenv/config";
 import { Agent } from "@xmtp/agent-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
+import { createGroq } from "@ai-sdk/groq";
+import { generateText, stepCountIs } from "ai";
+import { getCryptoPriceTool } from "./tools/crypto-price.js";
 
-console.log(process.env.XMTP_ENV);
-const agent = await Agent.createFromEnv({
-  env: process.env.XMTP_ENV as "local" | "dev" | "production",
-});
+/* Initialize the Groq client */
+const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
 
-agent.on("text", async (ctx) => {
-  if (ctx.isDm()) {
-    const messageContent = ctx.message.content;
-    const senderAddress = await ctx.getSenderAddress();
-    console.log(`Received message: ${messageContent} by ${senderAddress}`);
-    await ctx.sendText("gm");
-  }
-});
+const agent = await Agent.createFromEnv({});
 
 agent.on("text", async (ctx) => {
-  if (ctx.isGroup() && ctx.message.content.includes("@gm")) {
-    const senderAddress = await ctx.getSenderAddress();
-    console.log(
-      `Received message in group: ${ctx.message.content} by ${senderAddress}`,
+  const messageContent = ctx.message.content;
+  const senderAddress = await ctx.getSenderAddress();
+  console.log(`Received message: ${messageContent} by ${senderAddress}`);
+
+  try {
+    /* Get the AI response from Groq with tool calling */
+    const { text, toolCalls, steps } = await generateText({
+      model: groq("llama-3.3-70b-versatile"),
+      tools: {
+        getCryptoPrice: getCryptoPriceTool,
+      },
+      stopWhen: stepCountIs(5), // Allow up to 5 steps for multi-step reasoning
+      system:
+        "You are a helpful crypto assistant. When users ask about cryptocurrency prices, use the getCryptoPrice tool. " +
+        "Common coin IDs: bitcoin, ethereum, solana, cardano, polkadot, avalanche-2, chainlink, uniswap. " +
+        "Always provide context and format prices nicely in your response.",
+      messages: [{ role: "user", content: messageContent }],
+    });
+
+    console.log(`AI generated ${steps.length} step(s)`);
+    if (toolCalls.length > 0) {
+      console.log(
+        `Tool calls made: ${toolCalls.map((tc) => tc.toolName).join(", ")}`,
+      );
+    }
+
+    console.log(`Sending AI response: ${text}`);
+    /* Send the AI response to the conversation */
+    await ctx.sendText(text);
+  } catch (error) {
+    console.error("Error getting AI response:", error);
+    await ctx.sendText(
+      "Sorry, I encountered an error processing your message.",
     );
-    await ctx.sendText("gm");
   }
 });
 
@@ -32,4 +54,4 @@ agent.on("start", () => {
   console.log(`🔗${getTestUrl(agent.client)}`);
 });
 
-await agent.start();
+void agent.start();

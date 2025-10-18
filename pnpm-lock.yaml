@@ -8,12 +8,21 @@ importers:
 
   .:
     dependencies:
+      '@ai-sdk/groq':
+        specifier: ^2.0.24
+        version: 2.0.24(zod@4.1.12)
       '@xmtp/agent-sdk':
         specifier: '*'
-        version: 1.1.7(typescript@5.9.3)
+        version: 1.1.7(typescript@5.9.3)(zod@4.1.12)
+      ai:
+        specifier: ^5.0.76
+        version: 5.0.76(zod@4.1.12)
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
+      zod:
+        specifier: ^4.1.12
+        version: 4.1.12
     devDependencies:
       '@types/node':
         specifier: ^24.8.1
@@ -29,6 +38,28 @@ packages:
 
   '@adraffy/ens-normalize@1.11.1':
     resolution: {integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==}
+
+  '@ai-sdk/gateway@2.0.0':
+    resolution: {integrity: sha512-Gj0PuawK7NkZuyYgO/h5kDK/l6hFOjhLdTq3/Lli1FTl47iGmwhH1IZQpAL3Z09BeFYWakcwUmn02ovIm2wy9g==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/groq@2.0.24':
+    resolution: {integrity: sha512-PCtNwFsakxR6B/o+l3gtxlPIwN8lawK3vvOjRdC759Y8WtNxCv5RUs0JsxIKyAZxO+RBEy0AoL8xTQUy8fn3gw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider-utils@3.0.12':
+    resolution: {integrity: sha512-ZtbdvYxdMoria+2SlNarEk6Hlgyf+zzcznlD55EAl+7VZvJaSg2sqPvwArY7L6TfDEDJsnCq0fdhBSkYo0Xqdg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider@2.0.0':
+    resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
+    engines: {node: '>=18'}
 
   '@esbuild/aix-ppc64@0.25.11':
     resolution: {integrity: sha512-Xt1dOL13m8u0WE8iplx9Ibbm+hFAO0GsU2P34UNoDGvZYkY8ifSiy6Zuc1lYxfG7svWE2fzqCUmFp5HCn51gJg==}
@@ -205,6 +236,10 @@ packages:
   '@noble/secp256k1@2.3.0':
     resolution: {integrity: sha512-0TQed2gcBbIrh7Ccyw+y/uZQvbJwm7Ao4scBUxqpBCcsOlZG0O4KGfjtNAy/li4W8n1xt3dxrwJ0beZ2h2G6Kw==}
 
+  '@opentelemetry/api@1.9.0':
+    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
+    engines: {node: '>=8.0.0'}
+
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
 
@@ -244,8 +279,15 @@ packages:
   '@scure/bip39@1.6.0':
     resolution: {integrity: sha512-+lF0BbLiJNwVlev4eKelw1WWLaiKXw7sSl8T6FvBlWkdX+94aGJ4o8XjUdlyhTCjd8c+B3KT3JfS8P0bLRNU6A==}
 
+  '@standard-schema/spec@1.0.0':
+    resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
+
   '@types/node@24.8.1':
     resolution: {integrity: sha512-alv65KGRadQVfVcG69MuB4IzdYVpRwMG/mq8KWOaoOdyY617P5ivaDiMCGOFDWD2sAn5Q0mR3mRtUOgm99hL9Q==}
+
+  '@vercel/oidc@3.0.3':
+    resolution: {integrity: sha512-yNEQvPcVrK9sIe637+I0jD6leluPxzwJKx/Haw6F4H77CdDsszUn5V3o96LPziXkSNE2B83+Z3mjqGKBK/R6Gg==}
+    engines: {node: '>= 20'}
 
   '@xmtp/agent-sdk@1.1.7':
     resolution: {integrity: sha512-RddduUoHmIYLKZfVrgCXF/UW3aVaYG0j7+JhELX6Xece4QPdwIG0ttN031fab/PADPJfL5hfxBRkthiOlpZNrQ==}
@@ -291,6 +333,12 @@ packages:
       zod:
         optional: true
 
+  ai@5.0.76:
+    resolution: {integrity: sha512-ZCxi1vrpyCUnDbtYrO/W8GLvyacV9689f00yshTIQ3mFFphbD7eIv40a2AOZBv3GGRA7SSRYIDnr56wcS/gyQg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   dotenv@17.2.3:
     resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
     engines: {node: '>=12'}
@@ -302,6 +350,10 @@ packages:
 
   eventemitter3@5.0.1:
     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
+
+  eventsource-parser@3.0.6:
+    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
+    engines: {node: '>=18.0.0'}
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -315,6 +367,9 @@ packages:
     resolution: {integrity: sha512-I1fSfDCZL5P0v33sVqeTDSpcstAg/N+wF5HS033mogOVIp4B+oHC7oOCsA3axAbBSGTJ8QubbNmnIRN/h8U7hg==}
     peerDependencies:
       ws: '*'
+
+  json-schema@0.4.0:
+    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
 
   long@5.3.2:
     resolution: {integrity: sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==}
@@ -383,9 +438,36 @@ packages:
       utf-8-validate:
         optional: true
 
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+
 snapshots:
 
   '@adraffy/ens-normalize@1.11.1': {}
+
+  '@ai-sdk/gateway@2.0.0(zod@4.1.12)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
+      '@vercel/oidc': 3.0.3
+      zod: 4.1.12
+
+  '@ai-sdk/groq@2.0.24(zod@4.1.12)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
+      zod: 4.1.12
+
+  '@ai-sdk/provider-utils@3.0.12(zod@4.1.12)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@standard-schema/spec': 1.0.0
+      eventsource-parser: 3.0.6
+      zod: 4.1.12
+
+  '@ai-sdk/provider@2.0.0':
+    dependencies:
+      json-schema: 0.4.0
 
   '@esbuild/aix-ppc64@0.25.11':
     optional: true
@@ -477,6 +559,8 @@ snapshots:
 
   '@noble/secp256k1@2.3.0': {}
 
+  '@opentelemetry/api@1.9.0': {}
+
   '@protobufjs/aspromise@1.1.2': {}
 
   '@protobufjs/base64@1.1.2': {}
@@ -513,11 +597,15 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
 
+  '@standard-schema/spec@1.0.0': {}
+
   '@types/node@24.8.1':
     dependencies:
       undici-types: 7.14.0
 
-  '@xmtp/agent-sdk@1.1.7(typescript@5.9.3)':
+  '@vercel/oidc@3.0.3': {}
+
+  '@xmtp/agent-sdk@1.1.7(typescript@5.9.3)(zod@4.1.12)':
     dependencies:
       '@xmtp/content-type-reaction': 2.0.2
       '@xmtp/content-type-remote-attachment': 2.0.2
@@ -525,7 +613,7 @@ snapshots:
       '@xmtp/content-type-text': 2.0.2
       '@xmtp/node-sdk': 4.2.3
       uint8arrays: 5.1.0
-      viem: 2.38.3(typescript@5.9.3)
+      viem: 2.38.3(typescript@5.9.3)(zod@4.1.12)
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -576,9 +664,18 @@ snapshots:
       rxjs: 7.8.2
       undici: 5.29.0
 
-  abitype@1.1.0(typescript@5.9.3):
+  abitype@1.1.0(typescript@5.9.3)(zod@4.1.12):
     optionalDependencies:
       typescript: 5.9.3
+      zod: 4.1.12
+
+  ai@5.0.76(zod@4.1.12):
+    dependencies:
+      '@ai-sdk/gateway': 2.0.0(zod@4.1.12)
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.12(zod@4.1.12)
+      '@opentelemetry/api': 1.9.0
+      zod: 4.1.12
 
   dotenv@17.2.3: {}
 
@@ -613,6 +710,8 @@ snapshots:
 
   eventemitter3@5.0.1: {}
 
+  eventsource-parser@3.0.6: {}
+
   fsevents@2.3.3:
     optional: true
 
@@ -624,11 +723,13 @@ snapshots:
     dependencies:
       ws: 8.18.3
 
+  json-schema@0.4.0: {}
+
   long@5.3.2: {}
 
   multiformats@13.4.1: {}
 
-  ox@0.9.6(typescript@5.9.3):
+  ox@0.9.6(typescript@5.9.3)(zod@4.1.12):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
       '@noble/ciphers': 1.3.0
@@ -636,7 +737,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.1.0(typescript@5.9.3)
+      abitype: 1.1.0(typescript@5.9.3)(zod@4.1.12)
       eventemitter3: 5.0.1
     optionalDependencies:
       typescript: 5.9.3
@@ -685,15 +786,15 @@ snapshots:
     dependencies:
       '@fastify/busboy': 2.1.1
 
-  viem@2.38.3(typescript@5.9.3):
+  viem@2.38.3(typescript@5.9.3)(zod@4.1.12):
     dependencies:
       '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.1.0(typescript@5.9.3)
+      abitype: 1.1.0(typescript@5.9.3)(zod@4.1.12)
       isows: 1.0.7(ws@8.18.3)
-      ox: 0.9.6(typescript@5.9.3)
+      ox: 0.9.6(typescript@5.9.3)(zod@4.1.12)
       ws: 8.18.3
     optionalDependencies:
       typescript: 5.9.3
@@ -703,3 +804,5 @@ snapshots:
       - zod
 
   ws@8.18.3: {}
+
+  zod@4.1.12: {}

@@ -11,8 +11,11 @@
     "revoke": "tsx scripts/revokeInstallations.ts"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^2.0.24",
     "@xmtp/agent-sdk": "*",
-    "dotenv": "^17.2.3"
+    "ai": "^5.0.76",
+    "dotenv": "^17.2.3",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/node": "^24.8.1",
