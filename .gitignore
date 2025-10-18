@@ -27,6 +27,7 @@
 
 # xmtp database files
 xmtp-production-*
+xmtp-dev-*
 
 # debug
 npm-debug.log*

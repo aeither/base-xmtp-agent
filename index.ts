@@ -4,6 +4,10 @@ import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createGroq } from "@ai-sdk/groq";
 import { generateText, stepCountIs } from "ai";
 import { getCryptoPriceTool } from "./tools/crypto-price.js";
+import {
+  ContentTypeRemoteAttachment,
+} from "@xmtp/content-type-remote-attachment";
+import { createAndUploadRemoteAttachment } from "./tools/attachment-utils.js";
 
 /* Initialize the Groq client */
 const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
@@ -16,6 +20,30 @@ agent.on("text", async (ctx) => {
   console.log(`Received message: ${messageContent} by ${senderAddress}`);
 
   try {
+    // Check if the message contains @photo
+    if (messageContent.toLowerCase().includes("@photo")) {
+      console.log("Photo requested, sending screenshot...");
+      
+      try {
+        // Create and upload the remote attachment
+        const remoteAttachment = await createAndUploadRemoteAttachment(
+          "./screenshot.png",
+          "image/png",
+        );
+
+        // Send the remote attachment
+        await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
+        console.log("Photo sent successfully!");
+      } catch (uploadError) {
+        console.error("Error sending photo:", uploadError);
+        await ctx.sendText(
+          "I tried to send you a photo, but there was an issue with the upload service. " +
+          "Please make sure PINATA_API_KEY and PINATA_API_SECRET or WEB3_STORAGE_TOKEN are configured.",
+        );
+      }
+      return;
+    }
+
     /* Get the AI response from Groq with tool calling */
     const { text, toolCalls, steps } = await generateText({
       model: groq("llama-3.3-70b-versatile"),
@@ -44,6 +72,26 @@ agent.on("text", async (ctx) => {
     console.error("Error getting AI response:", error);
     await ctx.sendText(
       "Sorry, I encountered an error processing your message.",
+    );
+  }
+});
+
+agent.on("attachment", async (ctx) => {
+  const senderAddress = await ctx.getSenderAddress();
+  const remoteAttachment = ctx.message.content;
+
+  console.log(`Received remote attachment from ${senderAddress}`);
+  console.log(`Filename: ${remoteAttachment.filename}`);
+  console.log(`URL: ${remoteAttachment.url}`);
+
+  try {
+    // Simply send back the same attachment
+    await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
+    console.log(`✅ Echoed attachment back: ${remoteAttachment.filename}`);
+  } catch (error) {
+    console.error("Error echoing attachment:", error);
+    await ctx.sendText(
+      `❌ Error sending attachment back: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   }
 });
