@@ -1,30 +1,26 @@
-import "dotenv/config";
+import { createGroq } from "@ai-sdk/groq";
 import { Agent } from "@xmtp/agent-sdk";
 import { getTestUrl } from "@xmtp/agent-sdk/debug";
-import { createGroq } from "@ai-sdk/groq";
+import {
+  AttachmentCodec,
+  RemoteAttachmentCodec
+} from "@xmtp/content-type-remote-attachment";
+import {
+  ContentTypeWalletSendCalls,
+  WalletSendCallsCodec,
+} from "@xmtp/content-type-wallet-send-calls";
 import { generateText, stepCountIs } from "ai";
+import "dotenv/config";
 import { getCryptoPriceTool } from "./tools/crypto-price.js";
 import { getWebAppLinkTool } from "./tools/web-app-link.js";
 import {
-  AttachmentCodec,
-  ContentTypeRemoteAttachment,
-  RemoteAttachmentCodec,
-  type Attachment,
-} from "@xmtp/content-type-remote-attachment";
-import { loadRemoteAttachment } from "./utils/atttachment.js";
-import {
-  WalletSendCallsCodec,
-  ContentTypeWalletSendCalls,
-} from "@xmtp/content-type-wallet-send-calls";
-import { USDCHandler } from "./utils/usdc.js";
-import {
-  inlineActionsMiddleware,
-  registerAction,
   ActionBuilder,
-  sendActions,
+  inlineActionsMiddleware,
+  registerAction
 } from "./utils/inline-actions/inline-actions.js";
 import { ActionsCodec } from "./utils/inline-actions/types/ActionsContent.js";
 import { IntentCodec } from "./utils/inline-actions/types/IntentContent.js";
+import { USDCHandler } from "./utils/usdc.js";
 
 /* Initialize the Groq client */
 const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
@@ -41,6 +37,7 @@ const agent = await Agent.createFromEnv({
     new ActionsCodec(),
     new IntentCodec(),
   ],
+  env: process.env.XMTP_ENV as "local" | "dev" | "production",
 });
 
 /* Use the inline actions middleware */
@@ -121,6 +118,7 @@ registerAction("pay-receipt", async (ctx) => {
 });
 
 agent.on("attachment", async (ctx) => {
+
   const senderAddress = await ctx.getSenderAddress();
   const remoteAttachment = ctx.message.content;
 

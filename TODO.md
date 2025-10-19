@@ -1,6 +1,6 @@
-- image to text
+- image to text ()
 - button to get mini app link
-- 
+- send image
 
 Here’s a clear structure for how your Telegram AI agent (for helping small businesses pay freelancers in USDC) can work — including example user phrases, useful commands, and a friendly bot welcome message.
 
