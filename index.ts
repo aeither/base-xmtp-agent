@@ -5,14 +5,19 @@ import { createGroq } from "@ai-sdk/groq";
 import { generateText, stepCountIs } from "ai";
 import { getCryptoPriceTool } from "./tools/crypto-price.js";
 import {
+  AttachmentCodec,
   ContentTypeRemoteAttachment,
+  RemoteAttachmentCodec,
+  type Attachment,
 } from "@xmtp/content-type-remote-attachment";
-import { createAndUploadRemoteAttachment } from "./tools/attachment-utils.js";
+import { loadRemoteAttachment } from "./utils/atttachment.js";
 
 /* Initialize the Groq client */
 const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
 
-const agent = await Agent.createFromEnv({});
+const agent = await Agent.createFromEnv({
+  codecs: [new AttachmentCodec(), new RemoteAttachmentCodec()],
+});
 
 agent.on("text", async (ctx) => {
   const messageContent = ctx.message.content;
@@ -20,30 +25,6 @@ agent.on("text", async (ctx) => {
   console.log(`Received message: ${messageContent} by ${senderAddress}`);
 
   try {
-    // Check if the message contains @photo
-    if (messageContent.toLowerCase().includes("@photo")) {
-      console.log("Photo requested, sending screenshot...");
-      
-      try {
-        // Create and upload the remote attachment
-        const remoteAttachment = await createAndUploadRemoteAttachment(
-          "./screenshot.png",
-          "image/png",
-        );
-
-        // Send the remote attachment
-        await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
-        console.log("Photo sent successfully!");
-      } catch (uploadError) {
-        console.error("Error sending photo:", uploadError);
-        await ctx.sendText(
-          "I tried to send you a photo, but there was an issue with the upload service. " +
-          "Please make sure PINATA_API_KEY and PINATA_API_SECRET or WEB3_STORAGE_TOKEN are configured.",
-        );
-      }
-      return;
-    }
-
     /* Get the AI response from Groq with tool calling */
     const { text, toolCalls, steps } = await generateText({
       model: groq("llama-3.3-70b-versatile"),
@@ -85,13 +66,51 @@ agent.on("attachment", async (ctx) => {
   console.log(`URL: ${remoteAttachment.url}`);
 
   try {
-    // Simply send back the same attachment
-    await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
-    console.log(`✅ Echoed attachment back: ${remoteAttachment.filename}`);
+    // Check if it's an image file
+    const isImage = remoteAttachment.filename?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+
+    if (isImage) {
+      console.log("Processing image with vision model...");
+
+      const attachment = await loadRemoteAttachment(
+        ctx.message.content,
+        agent.client,
+      ) as Attachment;
+
+      console.log(`Attachment: ${attachment.filename}`);
+      console.log(`Attachment size: ${attachment.data.length} bytes`);
+      console.log(`Attachment data: ${Buffer.from(attachment.data).toString("base64")}`);
+
+      // Use Groq vision model to analyze the image
+      const { text } = await generateText({
+        model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "What do you see in this image? Please describe it in detail." },
+              { type: "image", image: Buffer.from(attachment.data).toString("base64") },
+            ],
+          },
+        ],
+        providerOptions: {
+          gateway: {
+            order: ["groq"], // Use Groq as first option
+          },
+        },
+      });
+
+      console.log(`Vision AI response: ${text}`);
+      await ctx.sendText(text);
+    } else {
+      // For non-image attachments, just echo back
+      await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
+      console.log(`✅ Echoed attachment back: ${remoteAttachment.filename}`);
+    }
   } catch (error) {
-    console.error("Error echoing attachment:", error);
+    console.error("Error processing attachment:", error);
     await ctx.sendText(
-      `❌ Error sending attachment back: ${error instanceof Error ? error.message : "Unknown error"}`
+      `❌ Error processing attachment: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   }
 });

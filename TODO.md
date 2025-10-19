@@ -1,0 +1,3 @@
+- image to text
+- button to get mini app link
+- 
