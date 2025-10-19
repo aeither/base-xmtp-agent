@@ -1,3 +1,7 @@
+## Persist DB
+
+RAILWAY_VOLUME_MOUNT_PATH="." # custom db path with persistent data volume (set to /app/data/ to deploy to railway)
+
 ## receive and prep for ai
 
   // Load and decode the received attachment
