@@ -4,6 +4,7 @@ import { getTestUrl } from "@xmtp/agent-sdk/debug";
 import { createGroq } from "@ai-sdk/groq";
 import { generateText, stepCountIs } from "ai";
 import { getCryptoPriceTool } from "./tools/crypto-price.js";
+import { getWebAppLinkTool } from "./tools/web-app-link.js";
 import {
   AttachmentCodec,
   ContentTypeRemoteAttachment,
@@ -45,10 +46,6 @@ const agent = await Agent.createFromEnv({
 /* Use the inline actions middleware */
 agent.use(inlineActionsMiddleware);
 
-agent.on("start", async (ctx) => {
-
-});
-
 agent.on("text", async (ctx) => {
   const messageContent = ctx.message.content;
   const senderAddress = await ctx.getSenderAddress();
@@ -60,12 +57,15 @@ agent.on("text", async (ctx) => {
       model: groq("llama-3.3-70b-versatile"),
       tools: {
         getCryptoPrice: getCryptoPriceTool,
+        getWebAppLink: getWebAppLinkTool,
       },
       stopWhen: stepCountIs(5), // Allow up to 5 steps for multi-step reasoning
       system:
         "You are a helpful small business assistant that helps clients make payments to freelancers easily. " +
         "You can help with checking cryptocurrency prices for payments using the getCryptoPrice tool. " +
+        "When users ask about the web app, mini app, or opening the app, use the getWebAppLink tool to provide them with the link. " +
         "Be professional, friendly, and focus on making the payment process simple and straightforward. " +
+        "Be concise and to the point. " +
         "Provide clear instructions and helpful information about crypto payments when needed.",
       messages: [{ role: "user", content: messageContent }],
     });
@@ -95,7 +95,7 @@ registerAction("pay-receipt", async (ctx) => {
 
   // Extract payment details (in a real implementation, these would come from vision AI analysis)
   const recipientAddress = "0x2191433264B3E4F50439b3822323EC14448B192c";
-  const amount = 0.05;
+  const amount = 0.01;
   const amountInDecimals = Math.floor(amount * Math.pow(10, networkConfig.decimals));
 
   // Create USDC transfer calls
@@ -128,11 +128,17 @@ agent.on("attachment", async (ctx) => {
   console.log(`Filename: ${remoteAttachment.filename}`);
   console.log(`URL: ${remoteAttachment.url}`);
 
+  // Send analyzing message
+  await ctx.sendText("🔍 Analyzing receipt...");
+
+  // Wait 3 seconds before processing
+  await new Promise(resolve => setTimeout(resolve, 3000));
+
   await ActionBuilder.create(
-    "pay-receipt", 
+    "pay-receipt",
     "📄 Receipt Details:\n\n" +
     "👤 Receiver: 0x2191433264B3E4F50439b3822323EC14448B192c\n" +
-    "💰 Amount: 0.05 USDC\n" +
+    "💰 Amount: 0.01 USDC\n" +
     "📝 Notes: discord community management September"
   )
     .add("pay-receipt", "💸 Pay Now")
