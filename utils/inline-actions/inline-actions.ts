@@ -7,8 +7,8 @@ import {
   ContentTypeActions,
   type Action,
   type ActionsContent,
-} from "./types/ActionsContent";
-import { type IntentContent } from "./types/IntentContent";
+} from "./types/ActionsContent.js";
+import { type IntentContent } from "./types/IntentContent.js";
 
 // Core types
 export type ActionHandler = (ctx: MessageContext) => Promise<void>;
