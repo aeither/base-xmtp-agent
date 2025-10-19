@@ -11,12 +11,42 @@ import {
   type Attachment,
 } from "@xmtp/content-type-remote-attachment";
 import { loadRemoteAttachment } from "./utils/atttachment.js";
+import {
+  WalletSendCallsCodec,
+  ContentTypeWalletSendCalls,
+} from "@xmtp/content-type-wallet-send-calls";
+import { USDCHandler } from "./utils/usdc.js";
+import {
+  inlineActionsMiddleware,
+  registerAction,
+  ActionBuilder,
+  sendActions,
+} from "./utils/inline-actions/inline-actions.js";
+import { ActionsCodec } from "./utils/inline-actions/types/ActionsContent.js";
+import { IntentCodec } from "./utils/inline-actions/types/IntentContent.js";
 
 /* Initialize the Groq client */
 const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
 
+/* Initialize USDC handler for Base Mainnet */
+const usdcHandler = new USDCHandler("base-mainnet");
+const networkConfig = usdcHandler.getNetworkConfig();
+
 const agent = await Agent.createFromEnv({
-  codecs: [new AttachmentCodec(), new RemoteAttachmentCodec()],
+  codecs: [
+    new AttachmentCodec(),
+    new RemoteAttachmentCodec(),
+    new WalletSendCallsCodec(),
+    new ActionsCodec(),
+    new IntentCodec(),
+  ],
+});
+
+/* Use the inline actions middleware */
+agent.use(inlineActionsMiddleware);
+
+agent.on("start", async (ctx) => {
+
 });
 
 agent.on("text", async (ctx) => {
@@ -33,9 +63,10 @@ agent.on("text", async (ctx) => {
       },
       stopWhen: stepCountIs(5), // Allow up to 5 steps for multi-step reasoning
       system:
-        "You are a helpful crypto assistant. When users ask about cryptocurrency prices, use the getCryptoPrice tool. " +
-        "Common coin IDs: bitcoin, ethereum, solana, cardano, polkadot, avalanche-2, chainlink, uniswap. " +
-        "Always provide context and format prices nicely in your response.",
+        "You are a helpful small business assistant that helps clients make payments to freelancers easily. " +
+        "You can help with checking cryptocurrency prices for payments using the getCryptoPrice tool. " +
+        "Be professional, friendly, and focus on making the payment process simple and straightforward. " +
+        "Provide clear instructions and helpful information about crypto payments when needed.",
       messages: [{ role: "user", content: messageContent }],
     });
 
@@ -57,6 +88,38 @@ agent.on("text", async (ctx) => {
   }
 });
 
+/* Register payment action handler */
+registerAction("pay-receipt", async (ctx) => {
+  const senderAddress = await ctx.getSenderAddress();
+  if (!senderAddress) return;
+
+  // Extract payment details (in a real implementation, these would come from vision AI analysis)
+  const recipientAddress = "0x2191433264B3E4F50439b3822323EC14448B192c";
+  const amount = 0.05;
+  const amountInDecimals = Math.floor(amount * Math.pow(10, networkConfig.decimals));
+
+  // Create USDC transfer calls
+  const transferCalls = usdcHandler.createUSDCTransferCalls(
+    senderAddress,
+    recipientAddress,
+    amountInDecimals,
+  );
+
+  // Add rich metadata
+  transferCalls.calls[0].metadata = {
+    description: `Pay receipt: ${amount} USDC`,
+    transactionType: "transfer",
+    currency: "USDC",
+    amount: amountInDecimals.toString(),
+    decimals: networkConfig.decimals.toString(),
+    networkId: networkConfig.networkId,
+  };
+
+  // Send the payment transaction
+  await ctx.conversation.send(transferCalls, ContentTypeWalletSendCalls);
+  await ctx.sendText(`💸 Please approve the ${amount} USDC payment to ${recipientAddress.slice(0, 6)}...${recipientAddress.slice(-4)} in your wallet!`);
+});
+
 agent.on("attachment", async (ctx) => {
   const senderAddress = await ctx.getSenderAddress();
   const remoteAttachment = ctx.message.content;
@@ -65,54 +128,16 @@ agent.on("attachment", async (ctx) => {
   console.log(`Filename: ${remoteAttachment.filename}`);
   console.log(`URL: ${remoteAttachment.url}`);
 
-  try {
-    // Check if it's an image file
-    const isImage = remoteAttachment.filename?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+  await ActionBuilder.create(
+    "pay-receipt", 
+    "📄 Receipt Details:\n\n" +
+    "👤 Receiver: 0x2191433264B3E4F50439b3822323EC14448B192c\n" +
+    "💰 Amount: 0.05 USDC\n" +
+    "📝 Notes: discord community management September"
+  )
+    .add("pay-receipt", "💸 Pay Now")
+    .send(ctx);
 
-    if (isImage) {
-      console.log("Processing image with vision model...");
-
-      const attachment = await loadRemoteAttachment(
-        ctx.message.content,
-        agent.client,
-      ) as Attachment;
-
-      console.log(`Attachment: ${attachment.filename}`);
-      console.log(`Attachment size: ${attachment.data.length} bytes`);
-      console.log(`Attachment data: ${Buffer.from(attachment.data).toString("base64")}`);
-
-      // Use Groq vision model to analyze the image
-      const { text } = await generateText({
-        model: groq("meta-llama/llama-4-scout-17b-16e-instruct"),
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "What do you see in this image? Please describe it in detail." },
-              { type: "image", image: Buffer.from(attachment.data).toString("base64") },
-            ],
-          },
-        ],
-        providerOptions: {
-          gateway: {
-            order: ["groq"], // Use Groq as first option
-          },
-        },
-      });
-
-      console.log(`Vision AI response: ${text}`);
-      await ctx.sendText(text);
-    } else {
-      // For non-image attachments, just echo back
-      await ctx.conversation.send(remoteAttachment, ContentTypeRemoteAttachment);
-      console.log(`✅ Echoed attachment back: ${remoteAttachment.filename}`);
-    }
-  } catch (error) {
-    console.error("Error processing attachment:", error);
-    await ctx.sendText(
-      `❌ Error processing attachment: ${error instanceof Error ? error.message : "Unknown error"}`
-    );
-  }
 });
 
 agent.on("start", () => {

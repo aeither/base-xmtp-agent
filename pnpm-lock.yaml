@@ -14,12 +14,18 @@ importers:
       '@xmtp/agent-sdk':
         specifier: '*'
         version: 1.1.7(typescript@5.9.3)(zod@4.1.12)
+      '@xmtp/content-type-wallet-send-calls':
+        specifier: ^2.0.0
+        version: 2.0.0
       ai:
         specifier: ^5.0.76
         version: 5.0.76(zod@4.1.12)
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
+      viem:
+        specifier: ^2.38.3
+        version: 2.38.3(typescript@5.9.3)(zod@4.1.12)
       zod:
         specifier: ^4.1.12
         version: 4.1.12
@@ -310,6 +316,9 @@ packages:
 
   '@xmtp/content-type-text@2.0.2':
     resolution: {integrity: sha512-nlRufOYPrG5sNbruNPCsb6Qk9/jmJ5lMooPsZEo4Dbwda/2S4bSvrrIncT6if7M2SCha3hxtlgJlFGeTtHy4gQ==}
+
+  '@xmtp/content-type-wallet-send-calls@2.0.0':
+    resolution: {integrity: sha512-212g68DjwFMh3gaAwULJvrhpuje6Tp4rF94oy3lQRvnXCQ+xLkyDi8pT5Pyw3Dm6jW+ke1U0hauzV7sLCgIFSw==}
 
   '@xmtp/node-bindings@1.5.4':
     resolution: {integrity: sha512-ffVCQhV8xQWxE1plPIeVMr0qFFB4/2FjYuprowKIfxLqOUqUR9w+otxZFfMZ+MGQ5j37SpFnPxUgDoOrNczUJQ==}
@@ -645,6 +654,10 @@ snapshots:
       '@xmtp/proto': 3.87.0
 
   '@xmtp/content-type-text@2.0.2':
+    dependencies:
+      '@xmtp/content-type-primitives': 2.0.2
+
+  '@xmtp/content-type-wallet-send-calls@2.0.0':
     dependencies:
       '@xmtp/content-type-primitives': 2.0.2
 

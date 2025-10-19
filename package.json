@@ -13,8 +13,10 @@
   "dependencies": {
     "@ai-sdk/groq": "^2.0.24",
     "@xmtp/agent-sdk": "*",
+    "@xmtp/content-type-wallet-send-calls": "^2.0.0",
     "ai": "^5.0.76",
     "dotenv": "^17.2.3",
+    "viem": "^2.38.3",
     "zod": "^4.1.12"
   },
   "devDependencies": {
