@@ -101,14 +101,14 @@ agent.on("text", async (ctx) => {
       if (invoiceData) {
         console.log("Invoice details:", JSON.stringify(invoiceData.input));
       }
-      
+
       // Construct RemoteAttachment
       const remoteAttachment = {
         url: "https://b891d14d436694bb9a7feeba91730b95.ipfscdn.io/ipfs/QmYxTz1anYunf5bdcH2mbKUqEJVVwTBQetikLC7QKCng6g",
         contentDigest: "fe971730028e05d8debdb5cdb09d1fb1a744cd7623031f97ddeb43e9b9f59a80",
-        salt: new Uint8Array([249,253,253,160,166,33,141,85,1,207,14,232,102,217,169,110,45,66,108,235,237,6,52,120,74,197,75,239,130,8,19,247]),
-        nonce: new Uint8Array([96,65,200,188,87,43,87,243,112,53,250,239]),
-        secret: new Uint8Array([245,208,53,70,99,7,243,2,172,118,214,74,216,34,111,5,254,186,78,197,174,110,126,175,192,118,204,169,39,184,1,182]),
+        salt: new Uint8Array([249, 253, 253, 160, 166, 33, 141, 85, 1, 207, 14, 232, 102, 217, 169, 110, 45, 66, 108, 235, 237, 6, 52, 120, 74, 197, 75, 239, 130, 8, 19, 247]),
+        nonce: new Uint8Array([96, 65, 200, 188, 87, 43, 87, 243, 112, 53, 250, 239]),
+        secret: new Uint8Array([245, 208, 53, 70, 99, 7, 243, 2, 172, 118, 214, 74, 216, 34, 111, 5, 254, 186, 78, 197, 174, 110, 126, 175, 192, 118, 204, 169, 39, 184, 1, 182]),
         scheme: "https" as const,
         contentLength: 125441,
         filename: "B2F74090-9740-4CF9-8F38-AB50A9F6261C.png"
@@ -160,11 +160,30 @@ registerAction("pay-receipt", async (ctx) => {
 });
 
 agent.on("attachment", async (ctx) => {
+
   const senderAddress = await ctx.getSenderAddress();
-  console.log(`Received attachment from ${senderAddress}`);
-  
-  // Handle attachments as needed
-  await ctx.sendText("📎 Attachment received!");
+  const remoteAttachment = ctx.message.content;
+
+  console.log(`Received remote attachment from ${senderAddress}`);
+  console.log(`Filename: ${remoteAttachment.filename}`);
+  console.log(`URL: ${remoteAttachment.url}`);
+
+  // Send analyzing message
+  await ctx.sendText("🔍 Analyzing receipt...");
+
+  // Wait 3 seconds before processing
+  await new Promise(resolve => setTimeout(resolve, 3000));
+
+  await ActionBuilder.create(
+    "pay-receipt",
+    "📄 Receipt Details:\n\n" +
+    "👤 Receiver: 0x2191433264B3E4F50439b3822323EC14448B192c\n" +
+    "💰 Amount: 0.01 USDC\n" +
+    "📝 Notes: discord community management September"
+  )
+    .add("pay-receipt", "💸 Pay Now")
+    .send(ctx);
+
 });
 
 agent.on("start", () => {
