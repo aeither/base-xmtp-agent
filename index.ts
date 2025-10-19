@@ -15,6 +15,7 @@ import "dotenv/config";
 import { getCryptoPriceTool } from "./tools/crypto-price.js";
 import { getWebAppLinkTool } from "./tools/web-app-link.js";
 import { getGenerateInvoiceTool } from "./tools/generate-invoice.js";
+import { getManageFundsTool } from "./tools/manage-funds.js";
 import {
   ActionBuilder,
   inlineActionsMiddleware,
@@ -58,6 +59,7 @@ agent.on("text", async (ctx) => {
         getCryptoPrice: getCryptoPriceTool,
         getWebAppLink: getWebAppLinkTool,
         generateInvoice: getGenerateInvoiceTool,
+        manageFunds: getManageFundsTool,
       },
       stopWhen: stepCountIs(5), // Allow up to 5 steps for multi-step reasoning
       system:
@@ -65,6 +67,8 @@ agent.on("text", async (ctx) => {
         "You can help with checking cryptocurrency prices for payments using the getCryptoPrice tool. " +
         "When users ask about the web app, mini app, or opening the app, use the getWebAppLink tool to provide them with the link. " +
         "When users ask to generate, create, or send an invoice, use the generateInvoice tool. " +
+        "When users ask to manage funds, check the group's balance, or top up the group account, use the manageFunds tool. " +
+        "When showing fund management information, always refer to it as 'our' or 'the group's' funds (plural form). " +
         "Be professional, friendly, and focus on making the payment process simple and straightforward. " +
         "Be concise and to the point. " +
         "Provide clear instructions and helpful information about crypto payments when needed.",
@@ -82,6 +86,10 @@ agent.on("text", async (ctx) => {
     let invoiceGenerated = false;
     let invoiceData = null;
 
+    // Check if manageFunds was called
+    let manageFundsCalled = false;
+    let fundsData = null;
+
     for (const step of steps) {
       if (step.content && Array.isArray(step.content)) {
         for (const item of step.content) {
@@ -89,11 +97,14 @@ agent.on("text", async (ctx) => {
             invoiceGenerated = true;
             invoiceData = item;
             console.log("Invoice tool result found:", JSON.stringify(item));
-            break;
+          }
+          if (item.type === "tool-result" && item.toolName === "manageFunds") {
+            manageFundsCalled = true;
+            fundsData = item;
+            console.log("ManageFunds tool result found:", JSON.stringify(item));
           }
         }
       }
-      if (invoiceGenerated) break;
     }
 
     if (invoiceGenerated) {
@@ -118,6 +129,24 @@ agent.on("text", async (ctx) => {
       console.log(`Remote attachment sent for invoice`);
     } else {
       console.log("No invoice tool was called in this interaction.");
+    }
+
+    // Handle manageFunds tool result - show fund management action buttons
+    console.log("ManageFunds called:", manageFundsCalled);
+    console.log("Funds data:", fundsData);
+    if (manageFundsCalled && fundsData) {
+      console.log("ManageFunds called, showing fund management actions...");
+
+      await ActionBuilder.create(
+        "fund-management",
+        `💰 Fund Management\n`
+      )
+        .add("top-up-funds", "💸 Top Up Now")
+        .add("last-expenses", "📊 Last Expenses")
+        .add("members-list", "👥 Members List")
+        .add("upcoming-expenses", "📅 Upcoming Expenses")
+        .send(ctx);
+      console.log("Fund management action buttons sent");
     }
   } catch (error) {
     console.error("Error getting AI response:", error);
@@ -157,6 +186,102 @@ registerAction("pay-receipt", async (ctx) => {
   // Send the payment transaction
   await ctx.conversation.send(transferCalls, ContentTypeWalletSendCalls);
   await ctx.sendText(`💸 Please approve the ${amount} USDC payment to ${recipientAddress.slice(0, 6)}...${recipientAddress.slice(-4)} in your wallet!`);
+});
+
+/* Register top-up funds action handler */
+registerAction("top-up-funds", async (ctx) => {
+  const senderAddress = await ctx.getSenderAddress();
+  if (!senderAddress) return;
+
+  // Fund management wallet address
+  const fundWalletAddress = "0xA830Cd34D83C10Ba3A8bB2F25ff8BBae9BcD0125";
+
+  // Default top-up amount (can be customized)
+  const amount = 10; // 10 USDC
+  const amountInDecimals = Math.floor(amount * Math.pow(10, networkConfig.decimals));
+
+  // Create USDC transfer calls to fund wallet
+  const transferCalls = usdcHandler.createUSDCTransferCalls(
+    senderAddress,
+    fundWalletAddress,
+    amountInDecimals,
+  );
+
+  // Add rich metadata
+  transferCalls.calls[0].metadata = {
+    description: `Top up group funds: ${amount} USDC`,
+    transactionType: "transfer",
+    currency: "USDC",
+    amount: amountInDecimals.toString(),
+    decimals: networkConfig.decimals.toString(),
+    networkId: networkConfig.networkId,
+  };
+
+  // Send the payment transaction
+  await ctx.conversation.send(transferCalls, ContentTypeWalletSendCalls);
+  await ctx.sendText(`💸 Please approve the ${amount} USDC top-up to our group fund wallet ${fundWalletAddress.slice(0, 6)}...${fundWalletAddress.slice(-4)} in your wallet!`);
+});
+
+/* Register last expenses action handler */
+registerAction("last-expenses", async (ctx) => {
+  // Mock data for last expenses
+  const lastExpenses = [
+    { date: "2025-10-15", description: "Discord community management - September", amount: "150 USDC", recipient: "0x2191...192c" },
+    { date: "2025-10-10", description: "Social media content creation", amount: "200 USDC", recipient: "0x5678...abcd" },
+    { date: "2025-10-05", description: "Development bounty", amount: "500 USDC", recipient: "0x9abc...def1" },
+    { date: "2025-10-01", description: "Design work", amount: "300 USDC", recipient: "0x1234...5678" },
+  ];
+
+  let expensesList = "📊 Last Expenses\n\n";
+  lastExpenses.forEach(expense => {
+    expensesList += `📅 ${expense.date}\n`;
+    expensesList += `💼 ${expense.description}\n`;
+    expensesList += `💰 ${expense.amount}\n`;
+    expensesList += `👤 To: ${expense.recipient}\n\n`;
+  });
+
+  await ctx.sendText(expensesList);
+});
+
+/* Register members list action handler */
+registerAction("members-list", async (ctx) => {
+  // Mock data for fund members
+  const members = [
+    { name: "Alice", address: "0xA830...0125", contribution: "500 USDC", role: "Admin" },
+    { name: "Bob", address: "0x2191...192c", contribution: "350 USDC", role: "Member" },
+    { name: "Carol", address: "0x5678...abcd", contribution: "200 USDC", role: "Member" },
+    { name: "David", address: "0x9abc...def1", contribution: "150 USDC", role: "Member" },
+  ];
+
+  let membersList = "👥 Fund Members\n\n";
+  members.forEach(member => {
+    membersList += `${member.role === "Admin" ? "👑" : "👤"} ${member.name}\n`;
+    membersList += `🔑 ${member.address}\n`;
+    membersList += `💰 Contributed: ${member.contribution}\n\n`;
+  });
+
+  await ctx.sendText(membersList);
+});
+
+/* Register upcoming expenses action handler */
+registerAction("upcoming-expenses", async (ctx) => {
+  // Mock data for upcoming expenses
+  const upcomingExpenses = [
+    { dueDate: "2025-10-25", description: "Anna - Development work", amount: "300 USDC", status: "Pending" },
+    { dueDate: "2025-10-28", description: "Marketing campaign Q4", amount: "450 USDC", status: "Approved" },
+    { dueDate: "2025-11-01", description: "Server hosting - November", amount: "100 USDC", status: "Scheduled" },
+    { dueDate: "2025-11-05", description: "Community event sponsorship", amount: "250 USDC", status: "Under review" },
+  ];
+
+  let expensesList = "📅 Upcoming Expenses\n\n";
+  upcomingExpenses.forEach(expense => {
+    expensesList += `📆 Due: ${expense.dueDate}\n`;
+    expensesList += `💼 ${expense.description}\n`;
+    expensesList += `💰 ${expense.amount}\n`;
+    expensesList += `📌 Status: ${expense.status}\n\n`;
+  });
+
+  await ctx.sendText(expensesList);
 });
 
 agent.on("attachment", async (ctx) => {
